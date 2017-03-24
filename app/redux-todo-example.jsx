@@ -1,8 +1,14 @@
 var redux = require('redux');
 
-console.log('Starting redux');
+console.log('Starting todo redux example');
 
-var reducer = (state = {name: 'Anonymous'}, action) => {
+var stateDefault = {
+  todos: [],
+  searchText: '',
+  showCompleted: false
+}
+
+var reducer = (state = stateDefault, action) => {
   // state = state || {name: 'Anonymous'};
   return state;
 };
