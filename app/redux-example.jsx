@@ -1,4 +1,5 @@
 var redux = require('redux');
+var axios = require('axios');
 
 console.log('Starting redux');
 
@@ -147,12 +148,60 @@ var removeMovie = (id) => {
 };
 
 
+//Map reducer and action generators
+//--
+
+var mapReducer = (state = {isFetching: false, url: undefined}, action) => {
+  switch (action.type) {
+    case 'START_LOCATION_FETCH':
+      return {
+        isFetching: true,
+        url: undefined
+      };
+    case 'COMPLETE_LOCATION_FETCH':
+      return {
+        isFetching: false,
+        url: action.url
+      };
+    default:
+      return state;
+
+  }
+}
+
+var startLocationFetch = () => {
+  return {
+    type: 'START_LOCATION_FETCH'
+  }
+};
+
+var completeLocationFetch = (url) => {
+  return {
+    type: 'COMPLETE_LOCATION_FETCH',
+    url
+  }
+};
+
+var fetchLocation = () => {
+  store.dispatch(startLocationFetch());
+
+  axios.get('http://ipinfo.io').then(function (res) {
+    var loc = res.data.loc;
+    var baseUrl = 'http://maps.google.com?q=';
+
+    store.dispatch(completeLocationFetch(baseUrl + loc));
+  });
+}
+
+
+
 //Combine Reducers
 
 var reducer = redux.combineReducers({
   name: nameReducer,
   hobbies: hobbiesReducer,
-  movies: moviesReducer
+  movies: moviesReducer,
+  map: mapReducer
 });
 
 //Devtools
@@ -165,14 +214,20 @@ var store = redux.createStore(reducer, redux.compose(
 var unsubscribe = store.subscribe(() => {
   var state = store.getState();
 
-  console.log('Name is', state.name);
-  document.getElementById('app').innerHTML = state.name;
+
   console.log('New state', store.getState());
+  if (state.map.isFetching) {
+    document.getElementById('app').innerHTML = 'loading...';
+  } else if (state.map.url) {
+    document.getElementById('app').innerHTML = '<a href="'+ state.map.url+'"target="_blank">View Your Location</a>';
+  }
 });
 
 //Current State and Action dispatch
 var currentState = store.getState();
 console.log('currentState', currentState);
+
+fetchLocation();
 
 
 store.dispatch(changeName('Samantha'));
